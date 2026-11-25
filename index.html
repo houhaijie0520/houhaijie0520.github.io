@@ -1,0 +1,516 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>H. Hou · 高性能计算 / CAE 并行计算</title>
+<meta name="description" content="高性能计算与 CAE 并行计算方向，从事稀疏线性求解器、大规模并行数值模式与并行编程框架研发。EURO-PAR 2025 论文作者。">
+<meta name="color-scheme" content="light dark">
+<style>
+  :root {
+    --bg: #ffffff;
+    --fg: #1b1d20;
+    --fg-soft: #3f444b;
+    --muted: #6b7280;
+    --line: #e6e8eb;
+    --accent: #1d4ed8;
+    --accent-soft: #eef3ff;
+    --card: #fafbfc;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+            "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #101214;
+      --fg: #e9eaec;
+      --fg-soft: #c3c7cc;
+      --muted: #9aa1a9;
+      --line: #262a2f;
+      --accent: #7ba2ff;
+      --accent-soft: #18202e;
+      --card: #16191c;
+    }
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+
+  html { color-scheme: light dark; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.75;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 48px 28px 72px;
+  }
+
+  a {
+    color: var(--accent);
+    text-decoration: none;
+    text-underline-offset: 3px;
+  }
+  a:hover { text-decoration: underline; }
+
+  /* ---------- 顶部导航 ---------- */
+
+  .nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 20px;
+    justify-content: flex-end;
+    font-size: .82rem;
+    margin-bottom: 44px;
+  }
+  .nav a { color: var(--muted); }
+  .nav a:hover { color: var(--fg); text-decoration: none; }
+
+  /* ---------- 首屏 ---------- */
+
+  .eyebrow {
+    margin: 0 0 14px;
+    font-family: var(--mono);
+    font-size: .78rem;
+    letter-spacing: .06em;
+    color: var(--accent);
+  }
+
+  h1 {
+    margin: 0;
+    font-size: clamp(2.1rem, 6vw, 2.9rem);
+    line-height: 1.2;
+    letter-spacing: .01em;
+    font-weight: 700;
+  }
+
+  .lead {
+    margin: 18px 0 0;
+    max-width: 640px;
+    color: var(--fg-soft);
+    font-size: 1.02rem;
+  }
+
+  .hero-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 20px;
+    margin-top: 22px;
+    font-family: var(--mono);
+    font-size: .8rem;
+    color: var(--muted);
+  }
+
+  /* ---------- 指标条 ---------- */
+
+  .metrics {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    margin: 44px 0 0;
+    padding: 22px 0;
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+  }
+  .metric strong {
+    display: block;
+    font-family: var(--mono);
+    font-size: 1.45rem;
+    font-weight: 600;
+    line-height: 1.3;
+    color: var(--fg);
+    letter-spacing: -.01em;
+  }
+  .metric span {
+    display: block;
+    margin-top: 4px;
+    font-size: .76rem;
+    line-height: 1.5;
+    color: var(--muted);
+  }
+
+  /* ---------- 区块 ---------- */
+
+  section {
+    margin-top: 56px;
+    padding-top: 34px;
+    border-top: 1px solid var(--line);
+  }
+
+  h2 {
+    margin: 0 0 24px;
+    font-family: var(--mono);
+    font-size: .74rem;
+    font-weight: 600;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  h3 {
+    margin: 0;
+    font-size: 1.02rem;
+    font-weight: 600;
+    line-height: 1.5;
+  }
+
+  /* ---------- 经历 ---------- */
+
+  .item + .item {
+    margin-top: 28px;
+    padding-top: 28px;
+    border-top: 1px dashed var(--line);
+  }
+
+  .item-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 2px 16px;
+  }
+  .item-head .sub {
+    font-weight: 400;
+    font-size: .9rem;
+    color: var(--muted);
+  }
+  .when {
+    margin: 0;
+    font-family: var(--mono);
+    font-size: .78rem;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+  .role {
+    margin: 4px 0 10px;
+    font-size: .9rem;
+    color: var(--fg-soft);
+  }
+
+  ul {
+    margin: 10px 0 0;
+    padding-left: 1.15em;
+  }
+  li { margin: 5px 0; }
+  li::marker { color: var(--muted); }
+
+  /* ---------- 项目卡片 ---------- */
+
+  .card {
+    padding: 22px 24px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+  }
+  .card + .card { margin-top: 14px; }
+
+  .card-tag {
+    margin: 5px 0 12px;
+    font-family: var(--mono);
+    font-size: .76rem;
+    color: var(--muted);
+  }
+
+  .card p { margin: 0; color: var(--fg-soft); font-size: .94rem; }
+
+  code {
+    padding: 1px 5px;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    background: var(--bg);
+    font-family: var(--mono);
+    font-size: .86em;
+  }
+
+  .card .result {
+    margin-top: 14px;
+    padding: 10px 14px;
+    background: var(--accent-soft);
+    border-radius: 6px;
+    font-size: .88rem;
+    color: var(--fg-soft);
+  }
+  .result-label {
+    margin-right: 8px;
+    font-family: var(--mono);
+    font-size: .72rem;
+    letter-spacing: .08em;
+    color: var(--accent);
+  }
+
+  /* ---------- 技能 ---------- */
+
+  .skills {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px 32px;
+    margin: 0;
+  }
+  .skills dt {
+    font-size: .76rem;
+    font-weight: 600;
+    letter-spacing: .04em;
+    color: var(--muted);
+  }
+  .skills dd {
+    margin: 6px 0 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .skills dd span {
+    padding: 2px 9px;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    font-family: var(--mono);
+    font-size: .76rem;
+    line-height: 1.65;
+    color: var(--fg-soft);
+  }
+
+  /* ---------- 教育 / 论文 ---------- */
+
+  .edu + .edu {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px dashed var(--line);
+  }
+
+  .pub {
+    margin: 0;
+    padding-left: 1.15em;
+  }
+  .pub li { margin: 8px 0; }
+  .pub em {
+    font-style: italic;
+    color: var(--fg);
+  }
+
+  /* ---------- 页脚 ---------- */
+
+  footer {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 8px 20px;
+    margin-top: 56px;
+    padding-top: 22px;
+    border-top: 1px solid var(--line);
+    font-family: var(--mono);
+    font-size: .76rem;
+    color: var(--muted);
+  }
+  footer a { color: var(--muted); }
+  footer a:hover { color: var(--fg); }
+
+  /* ---------- 响应式 ---------- */
+
+  @media (max-width: 640px) {
+    .wrap { padding: 32px 20px 56px; }
+    .nav { justify-content: flex-start; margin-bottom: 32px; }
+    .metrics { grid-template-columns: 1fr 1fr; gap: 18px 16px; }
+    .skills { grid-template-columns: 1fr; }
+    .card { padding: 18px; }
+  }
+
+  /* ---------- 打印 ---------- */
+
+  @media print {
+    :root { --bg: #fff; --fg: #000; --fg-soft: #222; --muted: #555; --line: #ccc; --card: #fff; --accent-soft: #f2f2f2; }
+    .wrap { max-width: none; padding: 0; }
+    .nav { display: none; }
+    section { margin-top: 28px; padding-top: 18px; }
+    .card, .item { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+<main class="wrap">
+
+  <nav class="nav" aria-label="页面导航">
+    <a href="#work">工作经历</a>
+    <a href="#projects">项目</a>
+    <a href="#skills">技能</a>
+    <a href="#education">教育</a>
+    <a href="#publications">论文与专利</a>
+  </nav>
+
+  <header class="hero">
+    <p class="eyebrow">高性能计算 · CAE 并行计算 · 数值库与求解器</p>
+    <h1>H. Hou</h1>
+    <p class="lead">
+      中国科学技术大学计算机技术硕士，现在中物院软件中心从事 CAE 并行编程框架研发。
+      主要方向是稀疏线性直接求解器与大规模数值模式的并行化：提出 PRCM 重排序与统一稠密分块方案，
+      把访存受限的稀疏 LU 变成计算密集型任务；也负责将区域海洋模式 LICOM-Reg 重构进 JASMIN 框架，
+      并集成自适应网格加密。
+    </p>
+    <div class="hero-meta">
+      <span>在职 · 预计 2027 年 2 月到岗</span>
+    </div>
+  </header>
+
+  <section class="metrics" aria-label="关键成果">
+    <div class="metric"><strong>27.5×</strong><span>64 核并行加速比</span></div>
+    <div class="metric"><strong>5×</strong><span>AMR 网格分辨率提升</span></div>
+    <div class="metric"><strong>1.5 万行</strong><span>龙芯 VML 向量化</span></div>
+    <div class="metric"><strong>CCF B</strong><span>EURO-PAR 2025 论文</span></div>
+  </section>
+
+  <section id="work">
+    <h2>工作经历</h2>
+
+    <article class="item">
+      <div class="item-head">
+        <h3>四川中久数创科技有限公司 <span class="sub">中物院软件中心</span></h3>
+        <p class="when">2025 – 至今</p>
+      </div>
+      <p class="role">CAE 底座并行编程框架研发</p>
+      <ul>
+        <li>作为项目负责人完成中科院大气所区域海洋模式 LICOM-Reg 的 JASMIN 框架重构与自适应网格（AMR）集成，覆盖合同签署、项目实施到验收全流程。</li>
+        <li>参与并行编程框架表面 AMR 功能研发：块分裂与合并、2:1 平衡、网格结构动态调整、通信数据 pack/unpack 与拓扑映射算法。</li>
+        <li>使用 VTune、HPCToolkit 定位性能热点（4 个接口累计约占 70% 耗时）并完成针对性优化。</li>
+      </ul>
+    </article>
+
+    <article class="item">
+      <div class="item-head">
+        <h3>龙芯中科技术股份有限公司</h3>
+        <p class="when">2023 – 2024</p>
+      </div>
+      <p class="role">龙芯向量数学库（VML）研发 · 实习生</p>
+      <ul>
+        <li>完成三角函数、反三角函数、指数、对数等十余个初等函数的向量化实现，累计代码量约 1.5 万行。</li>
+        <li>制定完备的测试方案并修复检测出的缺陷，提升库的健壮性；通过化简冗余分支、消除指令空气泡优化性能。</li>
+        <li>参与 Linpack 测试；了解 BLAS、FFT 等常见 HPC 库的设计与优化方法。</li>
+      </ul>
+    </article>
+  </section>
+
+  <section id="projects">
+    <h2>代表项目</h2>
+
+    <article class="card">
+      <h3>区域海洋模式 LICOM-Reg 重构与自适应网格加密</h3>
+      <p class="card-tag">项目负责人 · 2025 – 至今 · JASMIN / Fortran / MPI</p>
+      <p>
+        面向区域海洋环流模拟的显式差分模式，原始均匀网格难以刻画中尺度涡、海流锋面与陆架边缘等局部过程。
+        完成模式向 JASMIN 并行框架的移植与重构，实现时间步进、内存管理与 IO 的模块化管理；
+        设计插值算子处理真实海陆地形，集成自适应网格加密能力。
+      </p>
+      <p class="result">
+        <span class="result-label">结果</span>
+        粗网格层规模 641×551、垂直 55 层，64 核并行加速比 <strong>27.5×</strong>；加密层分辨率提升 <strong>5 倍</strong>，
+        支持完整模拟年稳定运行，并捕捉到粗网格层未出现的动力学现象。
+      </p>
+    </article>
+
+    <article class="card">
+      <h3>并行编程框架表面 AMR 功能开发</h3>
+      <p class="card-tag">核心开发 · 2025 – 至今 · C++ / MPI / 性能调优</p>
+      <p>
+        表面网格自适应细化只对细网格层覆盖区域的网格表面参与计算，被覆盖区域不参与计算。
+        参与算法研发：块标记后分裂并同步通信数据，持续分裂直至满足 2:1 关系；实现块合并、块迁移与网格片增删；
+        设计 <code>blockdata</code> 数据结构与“网格层号 + patch 编号”块索引；完成数据 pack/unpack 与笛卡尔面号—面内位置—块内编号的拓扑映射。
+      </p>
+      <p class="result">
+        <span class="result-label">结果</span>
+        用 VTune 与 HPCToolkit 定位到 4 个接口累计约占 70% 的耗时，完成优化后框架表面 AMR 功能可稳定支撑学科解算器。
+      </p>
+    </article>
+
+    <article class="card">
+      <h3>面向矩阵计算单元的高效稀疏 LU 求解器</h3>
+      <p class="card-tag">项目负责人 · 2024 – 2025 · C++ / CUDA / MPI</p>
+      <p>
+        稀疏 LU 分解是第一性原理材料模拟中直接求解器的核心步骤，此类矩阵具有局部稠密特征。
+        提出提升数据局部性的重排序预处理算法 <strong>PRCM</strong>，平衡稀疏性与计算密集性；
+        设计统一稠密分块的数据结构，结合 level-3 BLAS 将访存受限的 LU 转为计算密集型任务；
+        基于 Roofline 模型评估性能，并在 GPU 上用滑动窗口实现计算—通信覆盖。
+      </p>
+      <p class="result">
+        <span class="result-label">结果</span>
+        NVIDIA A100 上性能大幅领先 SuperLU、PanguLU；CPU 版本在 Intel Xeon 8375C、AMD EPYC 7543 与鲲鹏 920 三平台完成验证。
+        成果发表于 <strong>EURO-PAR 2025</strong>（CCF B），并形成发明专利 1 项。
+      </p>
+    </article>
+  </section>
+
+  <section id="skills">
+    <h2>技能</h2>
+    <dl class="skills">
+      <div>
+        <dt>编程语言</dt>
+        <dd><span>C/C++</span><span>Python</span><span>Fortran</span><span>Shell</span><span>汇编</span></dd>
+      </div>
+      <div>
+        <dt>并行编程</dt>
+        <dd><span>MPI</span><span>OpenMP</span><span>CUDA</span></dd>
+      </div>
+      <div>
+        <dt>数值算法</dt>
+        <dd><span>稀疏直接求解器</span><span>稀疏矩阵重排序</span><span>图算法</span><span>有限元基础</span></dd>
+      </div>
+      <div>
+        <dt>数学库</dt>
+        <dd><span>向量数学库 VML</span><span>BLAS</span><span>FFT</span></dd>
+      </div>
+      <div>
+        <dt>性能与调试</dt>
+        <dd><span>VTune</span><span>perf</span><span>HPCToolkit</span><span>Roofline</span><span>gdb</span><span>valgrind</span><span>ASan</span></dd>
+      </div>
+      <div>
+        <dt>工程环境</dt>
+        <dd><span>Linux</span><span>Slurm</span><span>CMake</span><span>Makefile</span><span>conda</span><span>Git</span><span>设计模式</span></dd>
+      </div>
+    </dl>
+  </section>
+
+  <section id="education">
+    <h2>教育背景</h2>
+
+    <article class="edu">
+      <div class="item-head">
+        <h3>中国科学技术大学 <span class="sub">硕士 · 计算机技术</span></h3>
+        <p class="when">2022 – 2025</p>
+      </div>
+      <p class="role">研究方向：高性能计算、稀疏线性求解器</p>
+    </article>
+
+    <article class="edu">
+      <div class="item-head">
+        <h3>长安大学 <span class="sub">本科 · 机械电子工程</span></h3>
+        <p class="when">2016 – 2020</p>
+      </div>
+    </article>
+  </section>
+
+  <section id="publications">
+    <h2>论文与专利</h2>
+    <ul class="pub">
+      <li>
+        <em>Uniform Dense Blocking for Efficient Sparse LU Factorization in First-Principles Materials Simulation</em>，
+        EURO-PAR 2025: Parallel Processing（CCF B）
+      </li>
+      <li>
+        基于矩阵计算单元优化的稀疏 LU 分解求解方法及相关装置，发明专利，第一发明人，已公开
+      </li>
+      <li>研究生学业奖学金；英语 CET-6</li>
+    </ul>
+  </section>
+
+  <footer>
+    <span>高性能计算 · CAE 并行计算</span>
+    <span>最后更新 2026.11</span>
+  </footer>
+
+</main>
+</body>
+</html>
